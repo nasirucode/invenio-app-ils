@@ -17,7 +17,7 @@
 .. image:: https://img.shields.io/github/license/inveniosoftware/invenio-app-ils.svg
         :target: https://github.com/inveniosoftware/invenio-app-ils/blob/master/LICENSE
 
-Integrated Library System based on Invenio
+Integrated Library Management System based on Invenio
 
 Official documentation (under development) is available at
 https://invenioils.docs.cern.ch
