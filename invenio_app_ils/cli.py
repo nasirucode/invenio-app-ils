@@ -40,18 +40,12 @@ from .document_requests.api import DOCUMENT_REQUEST_PID_TYPE, DocumentRequest
 from .documents.api import DOCUMENT_PID_TYPE, Document
 from .eitems.api import EITEM_PID_TYPE, EItem
 from .ill.api import BORROWING_REQUEST_PID_TYPE, BorrowingRequest
-from .internal_locations.api import (
-    INTERNAL_LOCATION_PID_TYPE,
-    InternalLocation,
-)
+from .internal_locations.api import INTERNAL_LOCATION_PID_TYPE, InternalLocation
 from .items.api import ITEM_PID_TYPE, Item
 from .locations.api import LOCATION_PID_TYPE, Location
 from .providers.api import PROVIDER_PID_TYPE, Provider
 from .proxies import current_app_ils
-from .records_relations.api import (
-    RecordRelationsParentChild,
-    RecordRelationsSiblings,
-)
+from .records_relations.api import RecordRelationsParentChild, RecordRelationsSiblings
 from .relations.api import Relation
 from .series.api import SERIES_PID_TYPE, Series
 
@@ -60,9 +54,7 @@ CURRENT_DIR = pathlib.Path(__file__).parent.absolute()
 
 def minter(pid_type, pid_field, record):
     """Mint the given PID for the given record."""
-    pid = PersistentIdentifier.get(
-        pid_type="recid", pid_value=record[pid_field]
-    )
+    pid = PersistentIdentifier.get(pid_type="recid", pid_value=record[pid_field])
     pid.status = PIDStatus.REGISTERED
     pid.object_type = "rec"
     pid.object_uuid = record.id
@@ -244,9 +236,7 @@ class ItemGenerator(Generator):
         size = self.holder.items["total"]
         iloc_pids = self.holder.pids("internal_locations", "pid")
         doc_pids = self.holder.pids("documents", "pid")
-        shelf_lorem = TextLorem(
-            wsep="-", srange=(2, 3), words="Ax Bs Cw 8080".split()
-        )
+        shelf_lorem = TextLorem(wsep="-", srange=(2, 3), words="Ax Bs Cw 8080".split())
         objs = [
             {
                 "pid": self.create_pid(),
@@ -271,9 +261,7 @@ class ItemGenerator(Generator):
                         k=10,
                     )
                 ),
-                "circulation_restriction": random.choice(
-                    Item.CIRCULATION_RESTRICTIONS
-                ),
+                "circulation_restriction": random.choice(Item.CIRCULATION_RESTRICTIONS),
             }
             for pid in range(1, size + 1)
         ]
@@ -509,9 +497,7 @@ class DocumentGenerator(Generator):
 
     def generate_document(self, index, **kwargs):
         """Generate document data."""
-        publication_year = kwargs.get(
-            "publication_year", str(randint(1700, 2020))
-        )
+        publication_year = kwargs.get("publication_year", str(randint(1700, 2020)))
         imprint = random.choice(self.IMPRINTS)
         isbn = random.choice(self.ISBNS)
         n_authors = randint(1, len(self.AUTHORS))
@@ -537,15 +523,11 @@ class DocumentGenerator(Generator):
                 )
             ],
             "edition": str(index),
-            "keywords": [
-                {"source": lorem.sentence(), "value": lorem.sentence()}
-            ],
+            "keywords": [{"source": lorem.sentence(), "value": lorem.sentence()}],
             "conference_info": self.CONFERENCE_INFO,
             "number_of_pages": str(random.randint(0, 300)),
             "identifiers": [{"scheme": "ISBN", "value": isbn}],
-            "alternative_identifiers": [
-                {"scheme": "ARXIV", "value": "1234.1234"}
-            ],
+            "alternative_identifiers": [{"scheme": "ARXIV", "value": "1234.1234"}],
             "imprint": {
                 **imprint,
                 "date": "{}-08-02".format(publication_year),
@@ -727,9 +709,7 @@ class LoanGenerator(Generator):
         """Persist."""
         recs = []
         for obj in self.holder.loans["objs"]:
-            rec = self._persist(
-                CIRCULATION_LOAN_PID_TYPE, "pid", Loan.create(obj)
-            )
+            rec = self._persist(CIRCULATION_LOAN_PID_TYPE, "pid", Loan.create(obj))
             recs.append(rec)
         db.session.commit()
         return recs
@@ -750,9 +730,7 @@ class SeriesGenerator(Generator):
         obj["edition"] = str(index)
         for _ in range(randint(1, 2)):
             obj["identifiers"].append(
-                dict(
-                    scheme="ISBN", value=random.choice(DocumentGenerator.ISBNS)
-                )
+                dict(scheme="ISBN", value=random.choice(DocumentGenerator.ISBNS))
             )
 
     def random_serial(self, obj):
@@ -825,9 +803,7 @@ class SeriesGenerator(Generator):
                 "abstract": lorem.text(),
                 "languages": [
                     lang["key"]
-                    for lang in random.sample(
-                        self.holder.languages, randint(1, 3)
-                    )
+                    for lang in random.sample(self.holder.languages, randint(1, 3))
                 ],
                 "identifiers": [],
                 "created_by": {"type": "script", "value": "demo"},
@@ -837,9 +813,7 @@ class SeriesGenerator(Generator):
                         self.holder.tags, randint(1, len(self.holder.tags) - 1)
                     )
                 ],
-                "keywords": [
-                    {"source": lorem.sentence(), "value": lorem.sentence()}
-                ],
+                "keywords": [{"source": lorem.sentence(), "value": lorem.sentence()}],
                 "series_type": random.choice(Series.SERIES_TYPES),
             }
             if moi == "SERIAL":
@@ -874,11 +848,7 @@ class RecordRelationsGenerator(Generator):
         """Generate parent-child relations."""
 
         def random_docs():
-            docs = [
-                doc
-                for doc in documents
-                if doc["document_type"] != "SERIAL_ISSUE"
-            ]
+            docs = [doc for doc in documents if doc["document_type"] != "SERIAL_ISSUE"]
             return random.sample(docs, randint(1, min(5, len(docs))))
 
         objs = self.holder.related_records["objs"]
@@ -894,9 +864,7 @@ class RecordRelationsGenerator(Generator):
         objs.append(serial_parent)
         rr = RecordRelationsParentChild()
         serial_relation = Relation.get_relation_by_name("serial")
-        multipart_relation = Relation.get_relation_by_name(
-            "multipart_monograph"
-        )
+        multipart_relation = Relation.get_relation_by_name("multipart_monograph")
         re_volume = re.compile(r"Volume (?P<volume>\d+)", re.IGNORECASE)
         for index, child in enumerate(serial_children):
             m = re_volume.match(child["title"])
@@ -925,9 +893,7 @@ class RecordRelationsGenerator(Generator):
         rr = RecordRelationsSiblings()
 
         def add_random_relations(relation_type):
-            random_docs = random.sample(
-                documents, randint(2, min(5, len(documents)))
-            )
+            random_docs = random.sample(documents, randint(2, min(5, len(documents))))
 
             for record in random_docs:
                 for doc in documents:
@@ -971,9 +937,7 @@ class DocumentRequestGenerator(Generator):
 
     def random_pending_borrowing_request(self):
         """Get a random document PID."""
-        return random.choice(
-            self.holder.pids("pending_borrowing_requests", "pid")
-        )
+        return random.choice(self.holder.pids("pending_borrowing_requests", "pid"))
 
     def generate(self):
         """Generate."""
@@ -992,9 +956,7 @@ class DocumentRequestGenerator(Generator):
                 "medium": "PAPER",
             }
             if state == "DECLINED":
-                obj["decline_reason"] = random.choice(
-                    DocumentRequest.DECLINE_TYPES
-                )
+                obj["decline_reason"] = random.choice(DocumentRequest.DECLINE_TYPES)
                 if obj["decline_reason"] == "IN_CATALOG":
                     obj["document_pid"] = self.random_document_pid()
             elif state == "ACCEPTED":
@@ -1098,15 +1060,11 @@ class BorrowingRequestGenerator(Generator):
 
             t = now + timedelta(days=400)
             if obj["status"] != "PENDING":
-                obj["request_date"] = (
-                    self.random_date(now, t).date().isoformat()
-                )
+                obj["request_date"] = self.random_date(now, t).date().isoformat()
                 obj["expected_delivery_date"] = (
                     self.random_date(now, t).date().isoformat()
                 )
-                obj["received_date"] = (
-                    self.random_date(now, t).date().isoformat()
-                )
+                obj["received_date"] = self.random_date(now, t).date().isoformat()
                 obj["due_date"] = self.random_date(now, t).date().isoformat()
                 obj["payment"] = {
                     "debit_cost_main_currency": self.random_price("CHF"),
@@ -1201,9 +1159,7 @@ class OrderGenerator(Generator):
             ordered = randint(1, 5)
             yield dict(
                 copies_ordered=ordered,
-                copies_received=randint(1, ordered)
-                if status == "RECEIVED"
-                else 0,
+                copies_received=randint(1, ordered) if status == "RECEIVED" else 0,
                 document_pid=doc_pids[i],
                 is_donation=random.choice([True, False]),
                 is_patron_suggestion=random.choice([True, False]),
@@ -1229,16 +1185,12 @@ class OrderGenerator(Generator):
             obj = {
                 "pid": self.create_pid(),
                 "created_by_pid": self.holder.librarian_pid,
-                "provider_pid": random.choice(self.holder.vendors["objs"])[
-                    "pid"
-                ],
+                "provider_pid": random.choice(self.holder.vendors["objs"])["pid"],
                 "status": status,
                 "order_date": order_date.date().isoformat(),
                 "notes": lorem.sentence(),
                 "grand_total": self.random_price("EUR", min_value=50.0),
-                "grand_total_main_currency": self.random_price(
-                    "CHF", min_value=60.0
-                ),
+                "grand_total_main_currency": self.random_price("CHF", min_value=60.0),
                 "funds": list(set(lorem.sentence().split())),
                 "payment": {
                     "mode": "CREDIT_CARD",
@@ -1246,9 +1198,7 @@ class OrderGenerator(Generator):
                 "order_lines": order_lines,
             }
             obj["expected_delivery_date"] = (
-                self.random_date(now, now + timedelta(days=400))
-                .date()
-                .isoformat()
+                self.random_date(now, now + timedelta(days=400)).date().isoformat()
             )
             if obj["status"] == "CANCELLED":
                 obj["cancel_reason"] = lorem.sentence()
@@ -1276,17 +1226,6 @@ def demo():
 
 
 @demo.command()
-def locations():
-    """Create demo locations."""
-    click.echo("Creating locations...")
-    fake_holder = type("FakeHolder", (object,), {"location": {}})
-    loc_generator = LocationGenerator(fake_holder, minter)
-    loc_generator.generate()
-    rec = loc_generator.persist()
-    RecordIndexer().index(rec)
-
-
-@demo.command()
 @click.option("--docs", "n_docs", default=20)
 @click.option("--items", "n_items", default=50)
 @click.option("--eitems", "n_eitems", default=30)
@@ -1298,6 +1237,7 @@ def locations():
 @click.option("--orders", "n_orders", default=30)
 @click.option("--libraries", "n_libraries", default=10)
 @click.option("--borrowing-requests", "n_borrowing_requests", default=10)
+@click.option("--verbose", is_flag=True, help="Verbose output.")
 @with_appcontext
 def data(
     n_docs,
@@ -1311,6 +1251,7 @@ def data(
     n_orders,
     n_libraries,
     n_borrowing_requests,
+    verbose,
 ):
     """Insert demo data."""
     click.secho("Generating demo data", fg="yellow")
@@ -1358,6 +1299,64 @@ def data(
         total_borrowing_requests=n_borrowing_requests,
         total_libraries=n_libraries,
     )
+
+    # Create roles to restrict access
+    _run_command("roles create admin", verbose)
+    _run_command("roles create librarian", verbose)
+
+    # Create users
+    _run_command("users create patron1@test.ch -a --password=123456", verbose)  # ID 1
+    create_userprofile_for("patron1@test.ch", "patron1", "Yannic Vilma")
+    _run_command("users create patron2@test.ch -a --password=123456", verbose)  # ID 2
+    create_userprofile_for("patron2@test.ch", "patron2", "Diana Adi")
+    _run_command("users create admin@test.ch -a --password=123456", verbose)  # ID 3
+    create_userprofile_for("admin@test.ch", "admin", "Zeki Ryoichi")
+    _run_command("users create librarian@test.ch -a --password=123456", verbose)  # ID 4
+    create_userprofile_for("librarian@test.ch", "librarian", "Hector Nabu")
+    _run_command("users create patron3@test.ch -a --password=123456", verbose)  # ID 5
+    create_userprofile_for("patron3@test.ch", "patron3", "Medrod Tara")
+    _run_command("users create patron4@test.ch -a --password=123456", verbose)  # ID 6
+    create_userprofile_for("patron4@test.ch", "patron4", "Devi Cupid")
+
+    # Assign roles
+    _run_command("roles add admin@test.ch admin", verbose)
+    _run_command("roles add librarian@test.ch librarian", verbose)
+
+    # Index vocabularies
+    vocabularies_dir = os.path.join(CURRENT_DIR, "vocabularies", "data")
+    json_files = " ".join(
+        os.path.join(vocabularies_dir, name)
+        for name in os.listdir(vocabularies_dir)
+        if name.endswith(".json")
+    )
+    _run_command("vocabulary index json --force {}".format(json_files), verbose)
+    _run_command("vocabulary index opendefinition spdx --force", verbose)
+    _run_command("vocabulary index opendefinition opendefinition --force", verbose)
+
+    # index languages
+    _run_command("vocabulary index languages --force", verbose)
+
+    # Assign actions
+    _run_command("access allow superuser-access role admin", verbose)
+    _run_command("access allow ils-backoffice-access role librarian", verbose)
+
+    # Create demo locations
+    click.echo("Creating locations and internal locations...")
+    fake_holder = type("FakeHolder", (object,), {"location": {}})
+    loc_generator = LocationGenerator(fake_holder, minter)
+    loc_generator.generate()
+    rec = loc_generator.persist()
+    indexer.index(rec)
+    current_search.flush_and_refresh(index="*")
+
+    # Index patrons
+    _run_command("patrons index", verbose)
+
+    # Create files location
+    _run_command("files location --default ils /tmp/ils-files", verbose)
+
+    # Create static pages
+    _run_command("fixtures pages", verbose)
 
     # InternalLocations
     intlocs_generator = InternalLocationGenerator(holder, minter)
@@ -1432,9 +1431,7 @@ def data(
 
     # index internal locations
     indexer.bulk_index([str(r.id) for r in rec_intlocs])
-    click.echo(
-        "Sent to the indexing queue {0} locations".format(len(rec_intlocs))
-    )
+    click.echo("Sent to the indexing queue {0} locations".format(len(rec_intlocs)))
 
     # index series
     indexer.bulk_index([str(r.id) for r in rec_series])
@@ -1447,6 +1444,7 @@ def data(
     click.secho("Now indexing...", fg="green")
     # process queue so items can resolve circulation status correctly
     indexer.process_bulk_queue()
+    current_search.flush_and_refresh(index="*")
 
     # index eitems
     indexer.bulk_index([str(r.id) for r in rec_eitems])
@@ -1459,12 +1457,11 @@ def data(
     click.secho("Now indexing...", fg="green")
     # process queue so documents can resolve circulation correctly
     indexer.process_bulk_queue()
+    current_search.flush_and_refresh(index="*")
 
     # index libraries
     indexer.bulk_index([str(r.id) for r in rec_libraries])
-    click.echo(
-        "Sent to the indexing queue {0} libraries".format(len(rec_libraries))
-    )
+    click.echo("Sent to the indexing queue {0} libraries".format(len(rec_libraries)))
 
     # index borrowing requests
     indexer.bulk_index([str(r.id) for r in rec_borrowing_requests])
@@ -1476,22 +1473,16 @@ def data(
 
     click.secho("Now indexing...", fg="green")
     indexer.process_bulk_queue()
-
-    # flush all indices after indexing, otherwise ES won't be ready for tests
     current_search.flush_and_refresh(index="*")
 
     # index documents
     indexer.bulk_index([str(r.id) for r in rec_docs])
-    click.echo(
-        "Sent to the indexing queue {0} documents".format(len(rec_docs))
-    )
+    click.echo("Sent to the indexing queue {0} documents".format(len(rec_docs)))
 
     # index document requests
     indexer.bulk_index([str(r.id) for r in rec_requests])
     click.echo(
-        "Sent to the indexing queue {0} document requests".format(
-            len(rec_requests)
-        )
+        "Sent to the indexing queue {0} document requests".format(len(rec_requests))
     )
 
     # index loans again
@@ -1504,9 +1495,7 @@ def data(
 
     # index vendors
     indexer.bulk_index([str(r.id) for r in rec_vendors])
-    click.echo(
-        "Sent to the indexing queue {0} vendors".format(len(rec_vendors))
-    )
+    click.echo("Sent to the indexing queue {0} vendors".format(len(rec_vendors)))
 
     # index orders
     indexer.bulk_index([str(r.id) for r in rec_orders])
@@ -1514,6 +1503,7 @@ def data(
 
     click.secho("Now indexing...", fg="green")
     indexer.process_bulk_queue()
+    current_search.flush_and_refresh(index="*")
 
 
 def create_userprofile_for(email, username, full_name):
@@ -1525,6 +1515,57 @@ def create_userprofile_for(email, username, full_name):
         profile.full_name = full_name
         db.session.add(profile)
         db.session.commit()
+
+
+def _run_command(command, verbose, catch_exceptions=False):
+    from invenio_base.app import create_cli
+
+    click.secho("ils {}...".format(command), fg="green")
+
+    cli = create_cli()
+    runner = current_app.test_cli_runner()
+
+    res = runner.invoke(cli, command, catch_exceptions=catch_exceptions)
+    if verbose:
+        click.secho(res.output)
+
+
+@click.command()
+@click.option("--recreate-db", is_flag=True, help="Recreating DB.")
+@click.option("--skip-demo-data", is_flag=True, help="Skip creating demo data.")
+@click.option("--verbose", is_flag=True, help="Verbose output.")
+@with_appcontext
+def setup(
+    recreate_db,
+    skip_demo_data,
+    verbose,
+):
+    """ILS setup command."""
+    import redis
+    from flask import current_app
+
+    click.secho("ils setup started...", fg="blue")
+
+    # Clean redis
+    redis.StrictRedis.from_url(current_app.config["CACHE_REDIS_URL"]).flushall()
+    click.secho("redis cache cleared...", fg="red")
+
+    # Remove and create db and indexes
+    if recreate_db:
+        _run_command("db destroy --yes-i-know", verbose=verbose, catch_exceptions=True)
+        _run_command("db init", verbose)
+    else:
+        _run_command("db drop --yes-i-know", verbose)
+    _run_command("db create", verbose)
+    _run_command("index destroy --force --yes-i-know", verbose)
+    _run_command("index init --force", verbose)
+    _run_command("index queue init purge", verbose)
+
+    # Generate demo data
+    if not skip_demo_data:
+        _run_command("demo data {}".format("--verbose" if verbose else ""), verbose)
+
+    click.secho("ils setup finished successfully", fg="blue")
 
 
 @click.group()
@@ -1576,132 +1617,3 @@ def pages():
         db.session.add_all(pages)
     db.session.commit()
     click.echo("static pages created :)")
-
-
-@click.command()
-@click.option("--recreate-db", is_flag=True, help="Recreating DB.")
-@click.option(
-    "--skip-demo-data", is_flag=True, help="Skip creating demo data."
-)
-@click.option(
-    "--skip-file-location", is_flag=True, help="Skip creating file location."
-)
-@click.option("--skip-patrons", is_flag=True, help="Skip creating patrons.")
-@click.option(
-    "--skip-vocabularies", is_flag=True, help="Skip creating vocabularies."
-)
-@click.option("--skip-pages", is_flag=True, help="Skip creating static pages.")
-@click.option("--verbose", is_flag=True, help="Verbose output.")
-@with_appcontext
-def setup(
-    recreate_db,
-    skip_demo_data,
-    skip_file_location,
-    skip_patrons,
-    skip_vocabularies,
-    skip_pages,
-    verbose,
-):
-    """ILS setup command."""
-    import redis
-    from flask import current_app
-    from invenio_base.app import create_cli
-
-    click.secho("ils setup started...", fg="blue")
-
-    # Clean redis
-    redis.StrictRedis.from_url(
-        current_app.config["CACHE_REDIS_URL"]
-    ).flushall()
-    click.secho("redis cache cleared...", fg="red")
-
-    cli = create_cli()
-    runner = current_app.test_cli_runner()
-
-    def run_command(command, catch_exceptions=False):
-        click.secho("ils {}...".format(command), fg="green")
-        res = runner.invoke(cli, command, catch_exceptions=catch_exceptions)
-        if verbose:
-            click.secho(res.output)
-
-    # Remove and create db and indexes
-    if recreate_db:
-        run_command("db destroy --yes-i-know", catch_exceptions=True)
-        run_command("db init")
-    else:
-        run_command("db drop --yes-i-know")
-    run_command("db create")
-    run_command("index destroy --force --yes-i-know")
-    run_command("index init --force")
-    run_command("index queue init purge")
-
-    # Create roles to restrict access
-    run_command("roles create admin")
-    run_command("roles create librarian")
-
-    if not skip_patrons:
-        # Create users
-        run_command(
-            "users create patron1@test.ch -a --password=123456"
-        )  # ID 1
-        create_userprofile_for("patron1@test.ch", "patron1", "Yannic Vilma")
-        run_command(
-            "users create patron2@test.ch -a --password=123456"
-        )  # ID 2
-        create_userprofile_for("patron2@test.ch", "patron2", "Diana Adi")
-        run_command("users create admin@test.ch -a --password=123456")  # ID 3
-        create_userprofile_for("admin@test.ch", "admin", "Zeki Ryoichi")
-        run_command(
-            "users create librarian@test.ch -a --password=123456"
-        )  # ID 4
-        create_userprofile_for("librarian@test.ch", "librarian", "Hector Nabu")
-        run_command(
-            "users create patron3@test.ch -a --password=123456"
-        )  # ID 5
-        create_userprofile_for("patron3@test.ch", "patron3", "Medrod Tara")
-        run_command(
-            "users create patron4@test.ch -a --password=123456"
-        )  # ID 6
-        create_userprofile_for("patron4@test.ch", "patron4", "Devi Cupid")
-
-        # Assign roles
-        run_command("roles add admin@test.ch admin")
-        run_command("roles add librarian@test.ch librarian")
-
-    if not skip_vocabularies:
-        vocabularies_dir = os.path.join(CURRENT_DIR, "vocabularies", "data")
-        json_files = " ".join(
-            os.path.join(vocabularies_dir, name)
-            for name in os.listdir(vocabularies_dir)
-            if name.endswith(".json")
-        )
-        run_command("vocabulary index json --force {}".format(json_files))
-        run_command("vocabulary index opendefinition spdx --force")
-        run_command("vocabulary index opendefinition opendefinition --force")
-
-        # index languages
-        run_command("vocabulary index languages --force")
-
-    # Assign actions
-    run_command("access allow superuser-access role admin")
-    run_command("access allow ils-backoffice-access role librarian")
-
-    # Create one location as first
-    run_command("demo locations")
-
-    # Index patrons
-    run_command("patrons index")
-
-    # Create files location
-    if not skip_file_location:
-        run_command("files location --default ils /tmp/ils-files")
-
-    # Generate demo data
-    if not skip_demo_data:
-        run_command("demo data")
-
-    # Create static pages
-    if not skip_pages:
-        run_command("fixtures pages")
-
-    click.secho("ils setup finished successfully", fg="blue")

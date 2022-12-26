@@ -8,6 +8,26 @@
 Changes
 =======
 
+Version 1.0.0rc1 (released 2022-10-24)
+
+- first release candidate
+
+Version 1.0.0a69 (released 2022-10-18)
+
+- adapt literature search query
+
+Version 1.0.0a68 (released 2022-10-06)
+
+- bump pycountry
+
+Version 1.0.0a67 (released 2022-09-15)
+
+- removes ES6 support
+
+Version 1.0.0a66 (released 2022-08-24)
+
+- allows vocabularies values to be queried via REST API
+
 Version 1.0.0a65 (released 2022-08-16)
 
 - fix mappings for documents volume field
